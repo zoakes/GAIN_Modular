@@ -75,6 +75,7 @@
     <Compile Include="data.cs" />
     <Compile Include="deedle.cs" />
     <Compile Include="scratch.cs" />
+    <Compile Include="CloseExample.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
