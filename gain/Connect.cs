@@ -8,6 +8,8 @@ using System.Threading;
 using System.Timers;
 using Deedle;
 
+//using System.Datetime;
+
 using GF;
 using GF.Api.Orders.Drafts;
 using GF.Api.Orders.Drafts.Validation;
@@ -142,6 +144,8 @@ namespace cs_test
             }
         }
 
+        
+
         //Trailstop // Catstop portion...
 
         private static void RegisterOnAvgPositionChanged(GF.Api.IGFClient client)
@@ -160,6 +164,35 @@ namespace cs_test
                 e.ContractPosition.OTE + e.ContractPosition.Gain);
         }
 
+
+        //Helper function to simplify run_cat_trail function...
+        public int Go_Flat(GF.Api.Positions.PositionChangedEventArgs e)
+        {
+
+            var symbol = e.ContractPosition.Contract.Symbol;
+            var net_basis = e.ContractPosition.Net.Volume;
+            int _basis = net_basis > 0 ?  1  :  -1;
+
+            Console.WriteLine($"Exitting Position in -- {symbol}");
+            switch (_basis)
+            {
+                case -1:
+                    PlaceOrder(gfClient, e.ContractPosition.Contract.ElectronicContract, OrderSide.BuyToCover);
+                    return 0;
+
+                case 1:
+                    PlaceOrder(gfClient, e.ContractPosition.Contract.ElectronicContract, OrderSide.Sell);
+                    return 0;
+
+                default:
+                    return -1;
+            }
+        }
+
+
+
+
+        //Helper function for cat_Trail
         private double get_position_pnl(GF.Api.IGFClient client, GF.Api.Positions.PositionChangedEventArgs e)
         {
             //SEEMS LIKE IT NEEDS A LOOP... NO?
@@ -168,6 +201,7 @@ namespace cs_test
             return e.ContractPosition.OTE + e.ContractPosition.Gain;
             //IF DOES NOT WORK -- WILL NEED TO CALCULATE IT LIKE IN IB WITH AVGPRICE AND MID ... would be frustrating
         }
+
 
 
         public int run_cat_trail(GF.Api.Positions.PositionChangedEventArgs e)
@@ -212,6 +246,8 @@ namespace cs_test
             }
             return ret;
         }
+
+
 
         //THIS SHOULD BE CALLED ON TICK MOST LIKELY... whereas the entries on BARS
         public int check_ts_cs(GF.Api.Positions.PositionChangedEventArgs e)
@@ -272,8 +308,63 @@ namespace cs_test
             return 0;
         }
 
+        //Need to get this PositionChangedEventArg shit somewhere ? No clue where...
+        public void Run(GF.Api.Positions.PositionChangedEventArgs e,int EOD = 1600)
+        {
+            //Gets Datetime and uses inf loop to check for new positions, and manage the trailstop -- Eventually could also use OnBar for entries.
+            //Maybe should be using onBar bc new position only on bars...
+            DateTime now = DateTime.Now;
+            DateTime saveUtcNow = DateTime.UtcNow; //If needed later...
+            TimeSpan FUT_gap = new TimeSpan(0, 2, 0, 0); //0 days, 10 hours, 5 minutes and 1 second
+            //tempDate.ToString("MMMM dd, yyyy")
+            var ns = now.ToString("HH:mm:ss");
+
+            Console.WriteLine("Checking for Market Open...");
+            if(now.Hour == EOD) { Console.WriteLine("Waiting for Market Reopen."); }
+            while(now.Hour == EOD)
+            {
+                now = DateTime.Now;
+                Thread.Sleep(1000 * 60 * 5);                                    //5min Sleep -- waiting for re-open
+
+            }
+            Console.WriteLine("Market now Open.");
+            while (true)
+            {
+
+                now = DateTime.Now;
+                //need to call heartbeat? (runner?)
+
+                //Check if Closed FIRST -- so don't accidentally exit in non-hours
+                if (now.Hour == EOD)
+                {
+                    now = DateTime.Now;
+                    Thread.Sleep(1000 * 60 * 60);
+                }
+
+                //Entry Stuff / OnBar could also be called right here...  might want to check that flat tho (return from onBar?)
+
+                ns = now.ToString("HH:mm:ss");
+                Debug.WriteLine($"Running check_ts_cs -- {ns}");
+                check_ts_cs(e);                                                 //HOW IN THE FUCK DO WE GET THIS EVENT ARGUMENT ?  Don't see it being returned anywhere? onData?
 
 
+                Debug.WriteLine("Iteration Done ...");
+
+            }
+        }
+
+
+        /*
+         *
+         * TODO
+         *
+         * 
+         *Reference STATICS from scratch to implement --- using Algo.SPiv() for example...
+         * Initially just build out the TRAILSTOP + RUN methods
+         * NEED to find how the fucking e's are being returned, and where -- that's the big missing piece.
+         *
+         * Also may need to build up the safety around this, this is pretty damn basic.
+         */
 
     }
 }
