@@ -14,6 +14,7 @@ using GF;
 using GF.Api.Orders.Drafts;
 using GF.Api.Orders.Drafts.Validation;
 using GF.Api.Values.Orders;
+using GF.Api.Orders;
 
 namespace cs_test
 {
@@ -24,8 +25,9 @@ namespace cs_test
     public class Connect
     {
         public GF.Api.IGFClient gfClient; // = GF.Api.Impl.GFApi.CreateClient();
-        GF.Api.Threading.GFClientRunner runner;                                 //ptr to runner?
-        int port;
+        public GF.Api.Threading.GFClientRunner runner;                                 //ptr to runner?
+        public GF.Api.Accounts.IAccount account;
+        public int port;
 
         //Change to properties...
         double trail_tgt;
@@ -38,7 +40,9 @@ namespace cs_test
 
         public Connect(int p = 9200)
         {
+            
             gfClient = GF.Api.Impl.GFApi.CreateClient();                        //Removed declaration stuff (type, object -- etc)
+            account = gfClient.Accounts.Get().FirstOrDefault();
             runner = new GF.Api.Threading.GFClientRunner(gfClient);             //declared in class def
             runner.Start();
             Console.WriteLine("Runner (HB) started.");
@@ -48,6 +52,7 @@ namespace cs_test
 
         }
 
+        //Is this account ID?
         private string generate_UUID()
         {
             Console.WriteLine("Temporary Value -- Generate UUID later.");
@@ -103,7 +108,7 @@ namespace cs_test
             };
         }
 
-
+        /*Entry Logic...
         private static void GFClient_OnPriceTick(GF.Api.IGFClient client, GF.Api.Contracts.PriceChangedEventArgs e)
         {
             //TRADING LOGIC !! REPLACE WITH SHIT YOU WANT.
@@ -112,10 +117,12 @@ namespace cs_test
             else if (Math.Abs(e.Price.LastPrice - e.Price.AskPrice) < e.Contract.TickSize)
                 PlaceOrder(client, e.Contract, OrderSide.Sell, e.Price.AskPrice, "By Ask");
         }
+        */
 
-        private static void PlaceOrder(GF.Api.IGFClient client, GF.Api.Contracts.IContract contract, GF.Api.Values.Orders.OrderSide orderSide, double limitPrice = 0.0, string comments = "")
+        private static void PlaceOrder(GF.Api.IGFClient client, GF.Api.Contracts.IContract contract, GF.Api.Values.Orders.OrderSide orderSide, int qty, double limitPrice = 0.0, string comments = "")
         {
 
+            //var qty = position.Net.Volume;
             //TWEAK THIS SO THAT IF LIMITPRICE = 0.0, MARKET ORDER!!!!
             if (client.Orders.Get().Count == 0 || client.Orders.Get().Last().IsFinalState)
             {
@@ -123,8 +130,8 @@ namespace cs_test
                     .WithAccountID(client.Accounts.Get().First().ID)
                     .WithContractID(contract.ID)
                     .WithSide(orderSide)
-                    .WithOrderType(GF.Api.Values.Orders.OrderType.Limit)
-                    .WithPrice(limitPrice)
+                    .WithOrderType(GF.Api.Values.Orders.OrderType.Market)
+                    //.WithPrice(limitPrice)
                     .WithQuantity(1)
                     .WithEnd(DateTime.UtcNow.AddMinutes(1))
                     .WithComments(comments)
@@ -173,15 +180,16 @@ namespace cs_test
             var net_basis = e.ContractPosition.Net.Volume;
             int _basis = net_basis > 0 ?  1  :  -1;
 
+            var close_qty = Math.Abs(net_basis);
             Console.WriteLine($"Exitting Position in -- {symbol}");
             switch (_basis)
             {
                 case -1:
-                    PlaceOrder(gfClient, e.ContractPosition.Contract.ElectronicContract, OrderSide.BuyToCover);
+                    PlaceOrder(gfClient, e.ContractPosition.Contract.ElectronicContract, OrderSide.BuyToCover, close_qty);
                     return 0;
 
                 case 1:
-                    PlaceOrder(gfClient, e.ContractPosition.Contract.ElectronicContract, OrderSide.Sell);
+                    PlaceOrder(gfClient, e.ContractPosition.Contract.ElectronicContract, OrderSide.Sell, close_qty);
                     return 0;
 
                 default:
@@ -198,17 +206,21 @@ namespace cs_test
             //SEEMS LIKE IT NEEDS A LOOP... NO?
             //foreach(var pos in GF.Api.Positions....)
 
-            return e.ContractPosition.OTE + e.ContractPosition.Gain;
-            //IF DOES NOT WORK -- WILL NEED TO CALCULATE IT LIKE IN IB WITH AVGPRICE AND MID ... would be frustrating
+            return e.ContractPosition.OTE; //+ e.ContractPosition.Gain;  //Think Gain is Realized PNL, we want UNREALIZED only.
+            //THINK from documentation that it's only OTE for OpenPNL
         }
 
 
 
         public int run_cat_trail(GF.Api.Positions.PositionChangedEventArgs e)
         {
-            var ret = 0;
+            
+            //var account = gfClient.Accounts.Get().FirstOrDefault();
             //Should be inside loop ? Called inside loop?
-            foreach (var pos in e.AsArray()) //?
+            //var positions = GetOpenPositions(account, e);                     //Just in case we need more detail / Safety...
+
+            int ret = 0;
+            foreach (var pos in e.AsArray())
             {
                 ret = check_ts_cs(pos);
                 switch (ret)
@@ -231,14 +243,15 @@ namespace cs_test
 
                 if (ret != 0)
                 {
+                    var qty = Math.Abs(e.ContractPosition.Net.Volume);
                     if (e.ContractPosition.Net.Volume < 0)
                     {
-                        PlaceOrder(gfClient, e.ContractPosition.Contract.ElectronicContract, OrderSide.BuyToCover);
+                        PlaceOrder(gfClient, e.ContractPosition.Contract.ElectronicContract, OrderSide.BuyToCover, qty);
                         Console.WriteLine("SX order sent.");
                     }
                     if (e.ContractPosition.Net.Volume > 0)
                     {
-                        PlaceOrder(gfClient, e.ContractPosition.Contract.ElectronicContract, OrderSide.Sell);
+                        PlaceOrder(gfClient, e.ContractPosition.Contract.ElectronicContract, OrderSide.Sell, qty);
                         Console.WriteLine("LX order sent.");
                     }
 
@@ -346,7 +359,7 @@ namespace cs_test
                 ns = now.ToString("HH:mm:ss");
                 Debug.WriteLine($"Running check_ts_cs -- {ns}");
                 run_cat_trail(e);
-                //check_ts_cs(e);                                                 //HOW IN THE FUCK DO WE GET THIS EVENT ARGUMENT ?  Don't see it being returned anywhere? onData?
+
 
 
                 Debug.WriteLine("Iteration Done ...");
@@ -354,6 +367,7 @@ namespace cs_test
             }
         }
 
+        /*Initially -- Try to use JUST the above code...  IF you require more detail, then integrate the below stuff (tweaked examples) */
         //Goal was to find and loop thrugh all open positions... return them as an iterable object --  upon PositionsChangedEvent
         public IEnumerable<GF.Api.Positions.IPosition> GetPositions(GF.Api.Accounts.IAccount account, GF.Api.Positions.PositionChangedEventArgs e)
         {
@@ -381,33 +395,24 @@ namespace cs_test
 
         }
 
-        /*Old, complex version of GetPositions
-        public IEnumerable<GF.Api.Positions.IPosition> GetPositions(GF.Api.Accounts.IAccount account, GF.Api.Positions.IPositionFill position, 
-        GF.Api.Contracts.IContract contract, GF.Api.Positions.PositionChangedEventArgs e)
+
+
+        private int GetPositionVolume(GF.Api.Positions.IPosition position)
         {
-            return e.ContractPosition.AsArray();
-            
-            var pos_args = e;
-            foreach(var pos in pos_args.AsArray())
-            {
-                Console.WriteLine(pos);
-            }
-            //Goal was to loop thoguh all Open / Filled Positions
-            var ipos = e.ContractPosition;
-            foreach(var pos in ipos.AsArray()) 
-            {
-                Console.WriteLine(pos);
-            }
-            //return pos_args.AsArray(); -- Maybe this is what I need, but if this is all it is, I don't need a helper function for it (this arg e is in everything)
-            return ipos.AsArray();
-            //Does this need to be a simple Array return type? Array<GF.Api.Positions.IPositionFill>
-            
-
+            //            return position.Net.Volume;  //Does this not work??
+            return position.Short.Volume - position.Long.Volume;
         }
-        */
+
+        public void ExitPosition(GF.Api.Positions.IPosition position, GF.Api.Positions.PositionChangedEventArgs e)
+        {
+            var volume = GetPositionVolume(position);
+            var side = volume > 0 ? OrderSide.Sell : OrderSide.BuyToCover;
+            Console.WriteLine("Initiating order...");
+            PlaceOrder(gfClient, e.ContractPosition.Contract.ElectronicContract, OrderSide.Sell, Math.Abs(volume));
+            
+        }
 
 
-        //public GF.Api.Positions.PositionChangedEventArgs.GetPositionChangedEventArgs ?
 
         /*
          *
