@@ -356,24 +356,51 @@ namespace cs_test
 
         //Don't know how to do this either... can only find WORKING ORDERS
         //Goal was to find and loop thrugh all open positions... return them as an iterable object --  upon PositionsChangedEvent
-        public IEnumerable<GF.Api.Positions.IPositionFill> GetPositions(GF.Api.Accounts.IAccount account, GF.Api.Positions.IPositionFill position, GF.Api.Contracts.IContract contract, GF.Api.Positions.PositionChangedEventArgs e)
+        public IEnumerable<GF.Api.Positions.IPosition> GetPositions(GF.Api.Accounts.IAccount account, GF.Api.Positions.PositionChangedEventArgs e)
         {
+
+            //For added safety ... check that filled, and account match.
+            GF.Api.Positions.IPosition[] active = { };
+            int idx = 0;
+            foreach(var pos in e.AsArray())
+            {
+                if (e.ContractPosition.Account.ID == account.ID & e.ContractPosition.Fills != null)
+                    //Console.WriteLine(pos);
+                    active[idx] = pos.ContractPosition;
+                idx += 1;
+
+
+            }
+            //Real purpose -- return changed positions -- > To feed into TrailStop.
+            return e.ContractPosition.AsArray();
+            
+        }
+
+        /*Old, complex version of GetPositions
+        public IEnumerable<GF.Api.Positions.IPosition> GetPositions(GF.Api.Accounts.IAccount account, GF.Api.Positions.IPositionFill position, 
+        GF.Api.Contracts.IContract contract, GF.Api.Positions.PositionChangedEventArgs e)
+        {
+            return e.ContractPosition.AsArray();
+            
             var pos_args = e;
             foreach(var pos in pos_args.AsArray())
             {
                 Console.WriteLine(pos);
             }
             //Goal was to loop thoguh all Open / Filled Positions
-            foreach(var pos in position.AsArray()) 
+            var ipos = e.ContractPosition;
+            foreach(var pos in ipos.AsArray()) 
             {
                 Console.WriteLine(pos);
             }
             //return pos_args.AsArray(); -- Maybe this is what I need, but if this is all it is, I don't need a helper function for it (this arg e is in everything)
-            return position.AsArray();
-            //Does this need to be a simple Array return type? Array<GF.Api.Positions.IPositionFill> 
-        
+            return ipos.AsArray();
+            //Does this need to be a simple Array return type? Array<GF.Api.Positions.IPositionFill>
+            
+
         }
-        
+        */
+
 
         //public GF.Api.Positions.PositionChangedEventArgs.GetPositionChangedEventArgs ?
 
