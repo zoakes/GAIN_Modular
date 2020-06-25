@@ -354,17 +354,22 @@ namespace cs_test
             }
         }
 
-        //Don't know how to do this either... can only find WORKING ORDERS
         //Goal was to find and loop thrugh all open positions... return them as an iterable object --  upon PositionsChangedEvent
         public IEnumerable<GF.Api.Positions.IPosition> GetPositions(GF.Api.Accounts.IAccount account, GF.Api.Positions.PositionChangedEventArgs e)
         {
+            
+            return e.ContractPosition.AsArray();
+            
+        }
 
-            //For added safety ... check that filled, and account match.
-            GF.Api.Positions.IPosition[] active = { };
+        public IEnumerable<GF.Api.Positions.IPosition> GetOpenPositions(GF.Api.Accounts.IAccount account, GF.Api.Positions.PositionChangedEventArgs e)
+        {
+            GF.Api.Positions.IPosition[] active = { };                          //Should I make this a fixed memory level ? Will Dynamic create overflow?
             int idx = 0;
-            foreach(var pos in e.AsArray())
+            foreach (var pos in e.AsArray())
             {
-                if (e.ContractPosition.Account.ID == account.ID & e.ContractPosition.Fills != null)
+                //If Matched Account, Has fills, and has Open Position PNL... Add to active.
+                if (e.ContractPosition.Account.ID == account.ID & e.ContractPosition.Fills != null & e.ContractPosition.OTE != 0)
                     //Console.WriteLine(pos);
                     active[idx] = pos.ContractPosition;
                 idx += 1;
@@ -372,8 +377,8 @@ namespace cs_test
 
             }
             //Real purpose -- return changed positions -- > To feed into TrailStop.
-            return e.ContractPosition.AsArray();
-            
+            return active;
+
         }
 
         /*Old, complex version of GetPositions
