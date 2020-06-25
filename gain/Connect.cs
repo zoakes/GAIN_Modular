@@ -165,7 +165,7 @@ namespace cs_test
         }
 
 
-        //Helper function to simplify run_cat_trail function...
+        //Helper function to simplify run_cat_trail function... -- BETTER version in closeposition logic...
         public int Go_Flat(GF.Api.Positions.PositionChangedEventArgs e)
         {
 
@@ -345,7 +345,8 @@ namespace cs_test
 
                 ns = now.ToString("HH:mm:ss");
                 Debug.WriteLine($"Running check_ts_cs -- {ns}");
-                check_ts_cs(e);                                                 //HOW IN THE FUCK DO WE GET THIS EVENT ARGUMENT ?  Don't see it being returned anywhere? onData?
+                run_cat_trail(e);
+                //check_ts_cs(e);                                                 //HOW IN THE FUCK DO WE GET THIS EVENT ARGUMENT ?  Don't see it being returned anywhere? onData?
 
 
                 Debug.WriteLine("Iteration Done ...");
@@ -353,6 +354,20 @@ namespace cs_test
             }
         }
 
+        //Don't know how to do this either... can only find WORKING ORDERS
+        /*
+        public IEnumerable<GF.Api.Positions.IPositionFill> GetPositions(GF.Api.Accounts.IAccount account, GF.Api.Contracts.IContract contract)
+        {
+            //var pos = GF.Api.Positions.PositionChangedEventArgs;
+            foreach(var pos in GF.Api.Positions.IPosition) // -- Not working...
+            {
+                Console.WriteLine(pos);
+            }
+        
+        }
+        */
+
+        //public GF.Api.Positions.PositionChangedEventArgs.GetPositionChangedEventArgs ?
 
         /*
          *
