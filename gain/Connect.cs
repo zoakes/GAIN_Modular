@@ -355,17 +355,25 @@ namespace cs_test
         }
 
         //Don't know how to do this either... can only find WORKING ORDERS
-        /*
-        public IEnumerable<GF.Api.Positions.IPositionFill> GetPositions(GF.Api.Accounts.IAccount account, GF.Api.Contracts.IContract contract)
+        //Goal was to find and loop thrugh all open positions... return them as an iterable object --  upon PositionsChangedEvent
+        public IEnumerable<GF.Api.Positions.IPositionFill> GetPositions(GF.Api.Accounts.IAccount account, GF.Api.Positions.IPositionFill position, GF.Api.Contracts.IContract contract, GF.Api.Positions.PositionChangedEventArgs e)
         {
-            //var pos = GF.Api.Positions.PositionChangedEventArgs;
-            foreach(var pos in GF.Api.Positions.IPosition) // -- Not working...
+            var pos_args = e;
+            foreach(var pos in pos_args.AsArray())
             {
                 Console.WriteLine(pos);
             }
+            //Goal was to loop thoguh all Open / Filled Positions
+            foreach(var pos in position.AsArray()) 
+            {
+                Console.WriteLine(pos);
+            }
+            //return pos_args.AsArray(); -- Maybe this is what I need, but if this is all it is, I don't need a helper function for it (this arg e is in everything)
+            return position.AsArray();
+            //Does this need to be a simple Array return type? Array<GF.Api.Positions.IPositionFill> 
         
         }
-        */
+        
 
         //public GF.Api.Positions.PositionChangedEventArgs.GetPositionChangedEventArgs ?
 
