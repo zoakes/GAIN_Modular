@@ -929,7 +929,34 @@ namespace cs_test
             //BEGINNING OF GAIN ALGO --
 
             Connect c = new Connect();
-            c.get_acct_info();
+            //c.get_acct_info();
+
+            //int I = 0;
+
+            c.Connect_To_Gain(username: "ZOakes2645", password: "Temp");
+            c.RegisterOnAvgPositionChanged(c.gfClient);                        //Hidden Entryway into the program !! Initiates Run!!
+            /* IF ^^ triggers it to be called EVERY position change, then keep it with run_cat_trail in it ...
+             * IF it calls once, then ADD RUN to it for inf loop
+
+
+            //c.Run(); // UNSURE HOW TO USE E AS ARGUMENT !
+
+            //Maybe one of those += Run?
+            //c.gfClient.Accounts.AvgPositionChanged += Run(); //GFClient_OnAvgPositionChanged;
+
+
+
+            /* Dont know what this unsafe bullshit is.
+            unsafe
+            {
+                int* ip = &I;
+
+                char c = 'R';
+                char* pc = &c;
+                void* pv = pc; // Implicit conversion  
+                int* pi = (int*)pv; // Explicit conversion using casting operator
+            }
+            */
 
 
 

@@ -59,14 +59,16 @@ namespace cs_test
             return "9e61a8bc-0a31-4542-ad85-33ebab0e4e86";
         }
 
-        private void connect_to_gain(string username = "username", string password = "pw")
+        public void Connect_To_Gain(string username = "username", string password = "pw")
         {
             gfClient.Connection.Aggregate.LoginCompleted += (client, e) => Console.WriteLine("Connection complete");
             gfClient.Connection.Aggregate.LoginFailed += (client, e) => Console.WriteLine($"Connection failed: {e.FailReason}");
             gfClient.Connection.Aggregate.Disconnected += (client, e) => Console.WriteLine($"Disconnected: {e.Message}");
             gfClient.Logging.ErrorOccurred += (client, e) => Console.WriteLine($"{e.Exception.Message}");
+            //gfClient.Connection.Aggregate.LoginCompleted += Run;              //Tried initializing here... no luck
 
             string UID = generate_UUID();
+
             gfClient.Connection.Aggregate.Connect(
             new GF.Api.Connection.ConnectionContextBuilder()
                 .WithUserName(username)
@@ -108,7 +110,7 @@ namespace cs_test
             };
         }
 
-        /*Entry Logic...
+        /*Entry Logic...  COULD ALSO BE USED TO CALL RUN_TS_CS if needed (Called on Tick... so that works)
         private static void GFClient_OnPriceTick(GF.Api.IGFClient client, GF.Api.Contracts.PriceChangedEventArgs e)
         {
             //TRADING LOGIC !! REPLACE WITH SHIT YOU WANT.
@@ -155,13 +157,21 @@ namespace cs_test
 
         //Trailstop // Catstop portion...
 
-        private static void RegisterOnAvgPositionChanged(GF.Api.IGFClient client)
+        public void RegisterOnAvgPositionChanged(GF.Api.IGFClient client)
         {
             client.Accounts.AvgPositionChanged += GFClient_OnAvgPositionChanged;
+            //client.Accounts.AvgPositionChanged += run_cat_trail;      // No idea how to start this?
+            //client.Accounts.AvgPositionChanged += Test;
         }
 
-        private static void GFClient_OnAvgPositionChanged(GF.Api.IGFClient client, GF.Api.Positions.PositionChangedEventArgs e)
+        //Hidden Entry into the program -- This initializes the RUN.
+        private void GFClient_OnAvgPositionChanged(GF.Api.IGFClient client, GF.Api.Positions.PositionChangedEventArgs e)
         {
+            //Connect c; For static call to shit
+            // IFF -- This is called ONCE, replace run_cat_trail with RUN() here -- 
+            //Run(e);
+            run_cat_trail(e);
+            //Can throw RUN in here!! Since I can;t get it to run otherwise... Also does nice logging.  -- OR just call check_ts_cs right from here.
             Console.WriteLine(
                 "Average Position. {0}/{1}: Net Pos: {2} @ {3}, Bought: {4}, Sold {5}, Prev Pos: {6} P/L: {7:c}",
                 e.Account.Spec, e.ContractPosition.Contract.Symbol,
@@ -321,6 +331,11 @@ namespace cs_test
             return 0;
         }
 
+        public static void Test(GF.Api.Positions.PositionChangedEventArgs e)
+        {
+            Console.WriteLine("Testing event shit.");
+        }
+
         //Need to get this PositionChangedEventArg shit somewhere ? No clue where...
         public void Run(GF.Api.Positions.PositionChangedEventArgs e,int EOD = 1600)
         {
@@ -341,6 +356,8 @@ namespace cs_test
 
             }
             Console.WriteLine("Market now Open.");
+
+            RegisterOnAvgPositionChanged(gfClient);                             //Hopefully starts the event loop?
             while (true)
             {
 
@@ -417,13 +434,21 @@ namespace cs_test
         /*
          *
          * TODO
+         * 
+         *Initial Build:
+         *
+         * Also may need to build up the safety around this, this is pretty damn basic.
+         * Safety built up (Still not great in terms of exceptions, should add some asserts, etc)
+         *
          *
          * 
-         *Reference STATICS from scratch to implement --- using Algo.SPiv() for example...
+         * For FULL Native Strategy... 
+         * Reference STATICS from scratch to implement --- using Algo.SPiv() for example...
          * Initially just build out the TRAILSTOP + RUN methods
          * NEED to find how the fucking e's are being returned, and where -- that's the big missing piece.
          *
-         * Also may need to build up the safety around this, this is pretty damn basic.
+
+         * 
          */
 
     }

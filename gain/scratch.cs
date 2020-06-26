@@ -165,6 +165,8 @@ public readonly struct Dimension
 
 class Algo
 {
+    private static double[] sar;
+
     public double CatStop { get; set; } = 500.00;
     public double TrailAmt { get; set; } = 18.00;
     public double MinTgt { get; set; } = 100.00;
@@ -217,12 +219,35 @@ class Algo
         return (above, below);
     }
 
-    public double PSAR(List<double> ClosePrices)
+    public static int PSAR(List<double> Highs, List<double> Lows, double accel = .02, double limit = .2)
     {
         //TA.Lib.Core.SMA()
-        //QuantConnect.Indicators.PSAR()
-        return 0.0;
+        //Talib.Indicators.MA mA = new Talib.Indicators.MA(ClosePrices, )
+        int[] rets = {0};
+        //int* rp = rets[0];
+        int ri = rets[0]; //Just use this bullshit to fill args ? Or write from sar to rets?
+        TALibraryInCSharp.Core.Sar(0, 20, Highs.ToArray(), Lows.ToArray(), .02, .2,ref ri,ref ri, sar); //Missing vars like ref and outs?
+        //TALibraryInCSharp.Core.SarExt(0, 20, Highs, Lows, 0, outBegIdx: ref sar[0], outReal: sar); //this looks right? Whtt the fuck are all these arguments for?
+        //QuantConnect.Indicators.PSAR();
+        //Diff attemptt...
+        QuantConnect.Indicators.ParabolicStopAndReverse PSAR = new QuantConnect.Indicators.ParabolicStopAndReverse(); //How am I adding price data to this?
+        if (PSAR.IsReady)
+        {
+            return 1;
+        }
+
+        int ct = 0;
+        double[] drets = { 0.0 }; 
+        foreach(var i in sar)
+        {
+            drets[ct] = i;
+            ct++;
+        }
+        //ri = drets[0];  
+        //ref pi = drets[0];
+        return 0;
     }
+
 
     public (bool, bool) hh_ll(List<double> ClosePrices)
     {
