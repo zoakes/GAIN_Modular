@@ -27,6 +27,7 @@ namespace cs_test
         public GF.Api.IGFClient gfClient; // = GF.Api.Impl.GFApi.CreateClient();
         public GF.Api.Threading.GFClientRunner runner;                                 //ptr to runner?
         public GF.Api.Accounts.IAccount account;
+        public GF.Api.Positions.PositionChangedEventArgs e;
         public int port;
 
         //Change to properties...
@@ -36,6 +37,8 @@ namespace cs_test
         Dictionary<string, bool> trail_on;
         Dictionary<string, double> hi_pnl;
         Dictionary<string, double> trigger_pnl;
+
+        public GF.Api.Positions.IPosition[] active = { };
 
 
         public Connect(int p = 9200)
@@ -395,7 +398,8 @@ namespace cs_test
 
         public IEnumerable<GF.Api.Positions.IPosition> GetOpenPositions(GF.Api.Accounts.IAccount account, GF.Api.Positions.PositionChangedEventArgs e)
         {
-            GF.Api.Positions.IPosition[] active = { };                          //Should I make this a fixed memory level ? Will Dynamic create overflow?
+            //Made active an ATTRIBUTE / PROPERTY -- now can be called whenever.
+            //GF.Api.Positions.IPosition[] active = { };                          //Should I make this a fixed memory level ? Will Dynamic create overflow?
             int idx = 0;
             foreach (var pos in e.AsArray())
             {
