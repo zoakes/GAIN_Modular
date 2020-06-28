@@ -281,6 +281,7 @@ namespace cs_test
             //Called inside of loop of positions in Array  : )
             var opl = get_position_pnl(gfClient, e);
             var sym = e.ContractPosition.Contract.Symbol;
+            
 
             var def = false;
             var idef = 0.0;
@@ -340,7 +341,7 @@ namespace cs_test
         }
 
         //Need to get this PositionChangedEventArg shit somewhere ? No clue where...
-        public void Run(GF.Api.Positions.PositionChangedEventArgs e,int EOD = 1600)
+        public void Run(GF.Api.Positions.PositionChangedEventArgs e,int EOD = 1600,int sleep_seconds = 5)
         {
             //Gets Datetime and uses inf loop to check for new positions, and manage the trailstop -- Eventually could also use OnBar for entries.
             //Maybe should be using onBar bc new position only on bars...
@@ -360,11 +361,18 @@ namespace cs_test
             }
             Console.WriteLine("Market now Open.");
 
-            RegisterOnAvgPositionChanged(gfClient);                             //Hopefully starts the event loop?
+            RegisterOnAvgPositionChanged(gfClient);                             //Hopefully starts the event loop?   -- THIS COULD BE WAY OFF
+
+            //Replaced delay with sleep -- simpler.
+
+            // TimeSpan object with 0 days, 0 hours, 0 minutes and (SLEEP arg) seconds.  
+            //TimeSpan delay = new System.TimeSpan(0, 0, 0, sleep_seconds);
+            //DateTime next = now + delay;
             while (true)
             {
 
                 now = DateTime.Now;
+                
                 //need to call heartbeat? (runner?)
 
                 //Check if Closed FIRST -- so don't accidentally exit in non-hours
@@ -376,10 +384,17 @@ namespace cs_test
 
                 //Entry Stuff / OnBar could also be called right here...  might want to check that flat tho (return from onBar?)
 
+
+
+                //if(now > next)
+                    //next = DateTime.Now + delay;
                 ns = now.ToString("HH:mm:ss");
                 Debug.WriteLine($"Running check_ts_cs -- {ns}");
                 run_cat_trail(e);
-
+                Thread.Sleep(sleep_seconds * 1000);
+                    
+                
+                    
 
 
                 Debug.WriteLine("Iteration Done ...");
@@ -412,7 +427,9 @@ namespace cs_test
 
             }
             //Real purpose -- return changed positions -- > To feed into TrailStop.
+
             return active;
+            
 
         }
 
