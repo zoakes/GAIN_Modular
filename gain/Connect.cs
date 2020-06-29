@@ -389,10 +389,13 @@ namespace cs_test
                 //if(now > next)
                     //next = DateTime.Now + delay;
                 ns = now.ToString("HH:mm:ss");
-                Debug.WriteLine($"Running check_ts_cs -- {ns}");
-                run_cat_trail(e);
+                Debug.WriteLine($"Calling run_cat_trail -- {ns}");
+
+                var call = run_cat_trail(e);
+
+                Debug.WriteLine($"{call}");
                 Thread.Sleep(sleep_seconds * 1000);
-                    
+                  
                 
                     
 
