@@ -360,6 +360,7 @@ namespace cs_test
 
             RegisterOnAvgPositionChanged(gfClient);                             //Hopefully starts the event loop?   -- THIS COULD BE WAY OFF
 
+
             //Replaced delay with sleep -- simpler.
 
             // TimeSpan object with 0 days, 0 hours, 0 minutes and (SLEEP arg) seconds.  
