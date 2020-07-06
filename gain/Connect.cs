@@ -298,7 +298,6 @@ namespace cs_test
             if (opl > hi_pnl[sym])                                          //MIGHT need to init this dictionary when position opens?
             {
                 hi_pnl[sym] = opl;
-
             }
 
             //Update Trigger price...
@@ -307,10 +306,8 @@ namespace cs_test
             //Begin Trailing with Trigger...
             if (opl >= trail_tgt)
             {
-
                 if (!trail_on.TryGetValue(sym, out def))
                     trail_on[sym] = true;
-
             }
 
             if (trail_on[sym])
@@ -323,22 +320,22 @@ namespace cs_test
                 }
 
             }
-
             if (opl <= fixed_stop)
             {
                 return -1;
             }
 
-
-
-
             return 0;
         }
+
+
 
         public static void Test(GF.Api.Positions.PositionChangedEventArgs e)
         {
             Console.WriteLine("Testing event shit.");
         }
+
+
 
         //Need to get this PositionChangedEventArg shit somewhere ? No clue where...
         public void Run(GF.Api.Positions.PositionChangedEventArgs e,int EOD = 1600,int sleep_seconds = 5)
@@ -395,9 +392,6 @@ namespace cs_test
 
                 Debug.WriteLine($"{call}");
                 Thread.Sleep(sleep_seconds * 1000);
-                  
-                
-                    
 
 
                 Debug.WriteLine("Iteration Done ...");
