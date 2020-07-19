@@ -282,7 +282,7 @@ namespace cs_test
             var opl = get_position_pnl(gfClient, e);
             var sym = e.ContractPosition.Contract.Symbol;
             
-
+            //Default dict values ... (used in if/elifs)
             var def = false;
             var idef = 0.0;
 
